@@ -31,7 +31,7 @@ defmodule ExAwsMskIamAuth do
         _mod,
         _client_id,
         _timeout,
-        _sasl_opts = {_mechanism = :AWS_MSK_IAM, aws_secret_key_id, _aws_secret_access_key}
+        _sasl_opts = {_mechanism = :AWS_MSK_IAM, %{access_key_id: aws_secret_key_id}}
       )
       when aws_secret_key_id == nil,
       do: {:error, "AWS Secret Key ID is empty"}
@@ -42,7 +42,7 @@ defmodule ExAwsMskIamAuth do
         _mod,
         _client_id,
         _timeout,
-        _sasl_opts = {_mechanism = :AWS_MSK_IAM, _aws_secret_key_id, aws_secret_access_key}
+        _sasl_opts = {_mechanism = :AWS_MSK_IAM, %{secret_access_key: aws_secret_access_key}}
       )
       when aws_secret_access_key == nil,
       do: {:error, "AWS Secret Access Key is empty"}
@@ -65,32 +65,26 @@ defmodule ExAwsMskIamAuth do
         mod,
         client_id,
         timeout,
-        _sasl_opts = {mechanism = :AWS_MSK_IAM, aws_secret_key_id, aws_secret_access_key}
+        _sasl_opts =
+          {mechanism = :AWS_MSK_IAM,
+           %{access_key_id: access_key_id, secret_access_key: secret_access_key} = creds}
       )
-      when is_binary(aws_secret_key_id) and is_binary(aws_secret_access_key) do
-    IO.inspect(host)
-    IO.inspect(sock)
-
+      when is_binary(access_key_id) and is_binary(secret_access_key) do
     with :ok <- handshake(sock, mod, timeout, client_id, mechanism, @handshake_version) do
-      if System.get_env("SKIP_AUTH_STEP") do
-        :ok
-      else
-        client_final_msg =
-          @signed_payload_generator.get_msk_signed_payload(
-            host,
-            DateTime.utc_now(),
-            aws_secret_key_id,
-            aws_secret_access_key
-          )
+      client_final_msg =
+        @signed_payload_generator.get_msk_signed_payload(
+          host,
+          DateTime.utc_now(),
+          access_key_id,
+          secret_access_key,
+          Map.get(creds, :security_token)
+        )
 
-        IO.inspect(client_final_msg)
+      server_final_msg = send_recv(sock, mod, client_id, timeout, client_final_msg)
 
-        server_final_msg = send_recv(sock, mod, client_id, timeout, client_final_msg)
-
-        case @kpro_lib.find(:error_code, server_final_msg) do
-          :no_error -> :ok
-          other -> {:error, other}
-        end
+      case @kpro_lib.find(:error_code, server_final_msg) do
+        :no_error -> :ok
+        other -> {:error, other}
       end
     else
       error ->

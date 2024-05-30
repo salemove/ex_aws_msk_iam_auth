@@ -26,7 +26,7 @@ defmodule ExAwsMskIamAuthTest do
                  :ssl,
                  "client_id",
                  60_000,
-                 {:AWS_MSK_IAM, "access_id", nil}
+                 {:AWS_MSK_IAM, %{access_key_id: "access_id", secret_access_key: nil}}
                )
 
       assert {:error, "AWS Secret Key ID is empty"} =
@@ -36,7 +36,7 @@ defmodule ExAwsMskIamAuthTest do
                  :ssl,
                  "client_id",
                  60_000,
-                 {:AWS_MSK_IAM, nil, "access_secret"}
+                 {:AWS_MSK_IAM, %{access_key_id: nil, secret_access_key: "access_secret"}}
                )
     end
 
@@ -107,7 +107,7 @@ defmodule ExAwsMskIamAuthTest do
       end)
 
       SignedPayloadGeneratorMock
-      |> expect(:get_msk_signed_payload, fn "localhost", _, "access_id", "access_secret" ->
+      |> expect(:get_msk_signed_payload, fn "localhost", _, "access_id", "access_secret", _ ->
         "{\"action\":\"kafka-cluster:Connect\",\"host\":\"localhost\",\"user-agent\":\"msk-elixir-client\",\"version\":\"2020_10_22\",\"x-amz-algorithm\":\"AWS4-HMAC-SHA256\",\"x-amz-credential\":\"aws_secret_key_id/20220422/us-east-2/kafka-cluster/aws4_request\",\"x-amz-date\":\"20220422T111006Z\",\"x-amz-expires\":\"900\",\"x-amz-signature\":\"c61229c0d58532b023d29207adb96801ffa963df9b96c3fd2e736e7b0986c343\",\"x-amz-signedheaders\":\"host\"}"
       end)
 
@@ -118,7 +118,11 @@ defmodule ExAwsMskIamAuthTest do
                  :ssl,
                  "client_id",
                  60_000,
-                 {:AWS_MSK_IAM, "access_id", "access_secret"}
+                 {:AWS_MSK_IAM,
+                  %{
+                    access_key_id: "access_id",
+                    secret_access_key: "access_secret"
+                  }}
                )
     end
   end
