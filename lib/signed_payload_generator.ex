@@ -33,7 +33,12 @@ defmodule SignedPayloadGenerator do
       )
       when is_binary(aws_secret_key_id) and
              is_binary(aws_secret_access_key) do
-    url = "kafka://" <> to_string(host) <> "?Action=kafka-cluster%3AConnect"
+    url =
+      if System.get_env("SHORT_KAFKA_HOST") do
+        "kafka://kafka.#{region()}.amazonaws.com/"
+      else
+        "kafka://" <> to_string(host) <> "?Action=kafka-cluster%3AConnect"
+      end
 
     sig_opts = [ttl: ttl()]
 
