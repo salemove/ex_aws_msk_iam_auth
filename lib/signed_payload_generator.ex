@@ -7,15 +7,15 @@ defmodule SignedPayloadGenerator do
   """
 
   @callback get_msk_signed_payload(binary(), DateTime.t(), binary(), binary()) :: binary()
+  @app :ex_aws_msk_iam_auth
 
-  # TODO: Make service, region, user_agent, version and ttl runtime configurable
-  @service "kafka-cluster"
-  @region Application.compile_env(:ex_aws_msk_iam_auth, :region, "us-east-2")
   @method "GET"
-  @version "2020_10_22"
-  @user_agent "msk-elixir-client"
-  # 15 minutes
-  @ttl 900
+
+  defp service, do: Application.get_env(@app, :service, "kafka-cluster")
+  defp region, do: Application.get_env(@app, :region, "us-east-2")
+  defp version, do: Application.get_env(@app, :version, "2020_10_22")
+  defp user_agent, do: Application.get_env(@app, :user_agent, "msk-elixir-client")
+  defp ttl, do: Application.get_env(@app, :ttl_seconds, (_minute = 60) * 15)
 
   @doc """
   Builds AWS4 signed AWS_MSK_IAM payload needed for making SASL authentication request with broker
@@ -32,13 +32,13 @@ defmodule SignedPayloadGenerator do
       :aws_signature.sign_v4_query_params(
         aws_secret_key_id,
         aws_secret_access_key,
-        @region,
-        @service,
+        region(),
+        service(),
         # Formats to {{now.year, now.month, now.day}, {now.hour, now.minute, now.second}}
         now |> NaiveDateTime.to_erl(),
         @method,
         url,
-        ttl: @ttl
+        ttl: ttl()
       )
 
     url_map = :aws_signature_utils.parse_url(aws_v4_signed_query)
@@ -51,9 +51,9 @@ defmodule SignedPayloadGenerator do
     # Building rest of the payload in the format from Java reference implementation
     signed_payload =
       signed_payload
-      |> Map.put("version", @version)
+      |> Map.put("version", version())
       |> Map.put("host", url_map[:host])
-      |> Map.put("user-agent", @user_agent)
+      |> Map.put("user-agent", user_agent())
 
     Jason.encode!(signed_payload)
   end
