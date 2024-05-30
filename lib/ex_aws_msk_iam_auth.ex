@@ -80,6 +80,8 @@ defmodule ExAwsMskIamAuth do
           Map.get(creds, :security_token)
         )
 
+      IO.inspect(client_final_msg)
+
       server_final_msg = send_recv(sock, mod, client_id, timeout, client_final_msg)
 
       case @kpro_lib.find(:error_code, server_final_msg) do

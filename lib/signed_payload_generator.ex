@@ -40,6 +40,8 @@ defmodule SignedPayloadGenerator do
     sig_opts =
       if aws_security_token, do: [{:session_token, aws_security_token} | sig_opts], else: sig_opts
 
+    IO.inspect(sig_opts)
+
     aws_v4_signed_query =
       :aws_signature.sign_v4_query_params(
         aws_secret_key_id,
@@ -52,6 +54,8 @@ defmodule SignedPayloadGenerator do
         url,
         sig_opts
       )
+
+    IO.inspect(aws_v4_signed_query)
 
     url_map = :aws_signature_utils.parse_url(aws_v4_signed_query)
 
