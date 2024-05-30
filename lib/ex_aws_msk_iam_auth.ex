@@ -15,6 +15,16 @@ defmodule ExAwsMskIamAuth do
 
   @handshake_version 1
 
+  # TODO
+  # 10:00:27  #18 25.19 ==> ex_aws_msk_iam_auth
+  # 10:00:27  #18 25.19 Compiling 3 files (.ex)
+  # 10:00:27  #18 25.22     warning: function auth/7 required by behaviour :kpro_auth_backend is not implemented (in module ExAwsMskIamAuth)
+  # 10:00:27  #18 25.22     │
+  # 10:00:27  #18 25.22   1 │ defmodule ExAwsMskIamAuth do
+  # 10:00:27  #18 25.22     │ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # 10:00:27  #18 25.22     │
+  # 10:00:27  #18 25.22     └─ lib/ex_aws_msk_iam_auth.ex:1: ExAwsMskIamAuth (module)
+
   def auth(
         _host,
         _sock,
