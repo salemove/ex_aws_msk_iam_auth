@@ -21,7 +21,6 @@ defmodule ExAwsMskIamAuth.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:broadway_kafka, "~> 0.3.5"},
       {:aws_signature, "~> 0.3.0"},
       {:jason, "~> 1.3"},
       {:hammox, "~> 0.5", only: :test}
