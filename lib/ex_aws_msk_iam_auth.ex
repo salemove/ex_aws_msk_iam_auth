@@ -68,20 +68,29 @@ defmodule ExAwsMskIamAuth do
         _sasl_opts = {mechanism = :AWS_MSK_IAM, aws_secret_key_id, aws_secret_access_key}
       )
       when is_binary(aws_secret_key_id) and is_binary(aws_secret_access_key) do
+    IO.inspect(host)
+    IO.inspect(sock)
+
     with :ok <- handshake(sock, mod, timeout, client_id, mechanism, @handshake_version) do
-      client_final_msg =
-        @signed_payload_generator.get_msk_signed_payload(
-          host,
-          DateTime.utc_now(),
-          aws_secret_key_id,
-          aws_secret_access_key
-        )
+      if System.get_env("SKIP_AUTH_STEP") do
+        :ok
+      else
+        client_final_msg =
+          @signed_payload_generator.get_msk_signed_payload(
+            host,
+            DateTime.utc_now(),
+            aws_secret_key_id,
+            aws_secret_access_key
+          )
 
-      server_final_msg = send_recv(sock, mod, client_id, timeout, client_final_msg)
+        IO.inspect(client_final_msg)
 
-      case @kpro_lib.find(:error_code, server_final_msg) do
-        :no_error -> :ok
-        other -> {:error, other}
+        server_final_msg = send_recv(sock, mod, client_id, timeout, client_final_msg)
+
+        case @kpro_lib.find(:error_code, server_final_msg) do
+          :no_error -> :ok
+          other -> {:error, other}
+        end
       end
     else
       error ->

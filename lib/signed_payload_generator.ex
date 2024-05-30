@@ -41,6 +41,8 @@ defmodule SignedPayloadGenerator do
         ttl: ttl()
       )
 
+    IO.inspect(aws_v4_signed_query)
+
     url_map = :aws_signature_utils.parse_url(aws_v4_signed_query)
 
     # Convert query params into a map with keys downcased and values decoded
